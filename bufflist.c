@@ -13,8 +13,9 @@ bufflist_t *bufflist_init(void) {
 }
 
 static inline bufflist_t *bufflist_new_entry(bufflist_t *head, uint64_t blen,
-                                             uint64_t boff) {
+                                             uint64_t boff, uint64_t blksz) {
   bufflist_t *node = NULL;
+  uint64_t blkn = 0;
   if ((head == NULL) || (blen == 0)) {
     return NULL;
   }
@@ -32,14 +33,26 @@ static inline bufflist_t *bufflist_new_entry(bufflist_t *head, uint64_t blen,
   }
   node->blen = blen;
   node->boff = boff;
+  node->blksz = blksz;
   node->bsze = 0;
 
-  LOG_DEBUG("Add buffer [%lu][%lu] entry success!", node->boff, node->blen);
+  blkn = BLOCK_CNT(blen, blksz);
+  node->bbuf = malloc(sizeof(bool) * blkn);
+  if (node->bbuf == NULL) {
+    free(node->buff);
+    free(node);
+    return NULL;
+  }
+  memset(node->bbuf, 0, (sizeof(bool) * blkn));
+
+  LOG_DEBUG("Add buffer [%lu][%lu][%lu] entry success!", node->boff, node->blen,
+            node->blksz);
 
   return node;
 }
 
-bufflist_t *bufflist_new(bufflist_t *head, uint64_t blen, uint64_t boff) {
+bufflist_t *bufflist_new(bufflist_t *head, uint64_t blen, uint64_t boff,
+                         uint64_t blksz) {
   bufflist_t *node = NULL;
 
   // node = bufflist_find(head, boff);
@@ -49,17 +62,16 @@ bufflist_t *bufflist_new(bufflist_t *head, uint64_t blen, uint64_t boff) {
   //     return NULL;
   // }
 
-  node = bufflist_new_entry(head, blen, boff);
+  node = bufflist_new_entry(head, blen, boff, blksz);
   if (node == NULL) {
     return NULL;
   }
   list_add_tail(&(node->list), &(head->list));
 
   head->blen += blen;
-  head->bsze += blen;
 
-  LOG_DEBUG("Add buffer [%lu][%lu] success! total buffer size [%lu]",
-            node->boff, node->blen, head->blen);
+  LOG_DEBUG("Add buffer [%lu][%lu][%lu] success! total buffer size [%lu]",
+            node->boff, node->blen, node->blksz, head->blen);
 
   return node;
 }
@@ -75,8 +87,8 @@ bufflist_t *bufflist_find(bufflist_t *head, uint64_t boff) {
   list_for_each_entry(node, &(head->list), list) {
     if ((node != NULL) && (boff >= node->boff) &&
         (boff < (node->boff + node->blen))) {
-      LOG_DEBUG("Found buffer [%lu][%lu] by offset [%lu]", node->boff,
-                node->blen, boff);
+      LOG_DEBUG("Found buffer [%lu][%lu][%lu] by offset [%lu]", node->boff,
+                node->blen, node->blksz, boff);
       return node;
     }
   }
@@ -85,28 +97,26 @@ bufflist_t *bufflist_find(bufflist_t *head, uint64_t boff) {
   return NULL;
 }
 
-static inline bool bufflist_del_entry(bufflist_t *head, bufflist_t *node) {
+bool bufflist_delentry(bufflist_t *head, bufflist_t *node) {
   if ((head == NULL) || (node == NULL)) {
     return false;
   }
 
-  // if (list_empty(&(head->list)))
-  // {
-  //     LOG_ERROR("Buffer list is empty!");
-  //     return false;
-  // }
-
-  LOG_DEBUG("Del buffer [%lu][%lu] entry!", node->boff, node->blen);
+  LOG_DEBUG("Del buffer [%lu][%lu][%lu] entry!", node->boff, node->blen,
+            node->blksz);
 
   list_del(&(node->list));
 
   if (head->blen >= node->blen) {
     head->blen -= node->blen;
-    head->bsze -= node->blen;
   }
 
   if (node->buff != NULL) {
     free(node->buff);
+  }
+
+  if (node->bbuf != NULL) {
+    free(node->bbuf);
   }
 
   free(node);
@@ -114,8 +124,8 @@ static inline bool bufflist_del_entry(bufflist_t *head, bufflist_t *node) {
   return true;
 }
 
-bool bufflist_del(bufflist_t *head, uint64_t boff) {
-  if (!bufflist_del_entry(head, bufflist_find(head, boff))) {
+bool bufflist_delete(bufflist_t *head, uint64_t boff) {
+  if (!bufflist_delentry(head, bufflist_find(head, boff))) {
     LOG_ERROR("Failed to delete buffer by offset [%lu]", boff);
     return false;
   }
@@ -132,16 +142,35 @@ bool bufflist_destroy(bufflist_t *head) {
     return false;
   }
 
-  if (list_empty(&(head->list))) {
-    LOG_ERROR("Buffer list is empty!");
-    return NULL;
-  }
-
   list_for_each_entry_safe(node, temp, &(head->list), list) {
-    bufflist_del_entry(head, node);
+    bufflist_delentry(head, node);
   }
 
-  LOG_ERROR("Buffer destroy success!");
+  free(head);
+
+  LOG_DEBUG("Buffer destroy success!");
 
   return true;
 }
+#if 0
+bool bufflist_foreach(bufflist_t *head, bufflist_foreach_cb callback) {
+    bufflist_t *node = NULL;
+    bufflist_t *temp = NULL;
+    if ((head == NULL) || (callback == NULL)) {
+        return false;
+    }
+
+    if (list_empty(&(head->list))) {
+        LOG_ERROR("Buffer list is empty!");
+        return false;
+    }
+
+    list_for_each_entry_safe(node, temp, &(head->list), list) {
+        if (callback(head, node)) {
+            break;
+        }
+    }
+
+    return true;
+}
+#endif

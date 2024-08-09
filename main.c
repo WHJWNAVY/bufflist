@@ -6,17 +6,19 @@
 #define LOG_DEBUG(FMT, ...)
 #endif
 
-#define BUFFER_LEN 100
+#define BUFFER_LEN 1024
+#define BLOCKS_LEN 512
 
 int main(int argc, char *argv[]) {
   uint64_t idx = 0;
   uint64_t boff = 0;
   uint64_t blen = BUFFER_LEN;
+  uint64_t blks = BLOCKS_LEN;
   bufflist_t *nodebuf = NULL;
   bufflist_t *buffer = bufflist_init();
 
   for (idx = 0; idx < 10; idx++) {
-    if ((nodebuf = bufflist_new(buffer, blen, boff)) == NULL) {
+    if ((nodebuf = bufflist_new(buffer, blen, boff, blks)) == NULL) {
       LOG_DEBUG("Failed to add buffer [%lu][%lu]", boff, blen);
       break;
     }
@@ -29,7 +31,7 @@ int main(int argc, char *argv[]) {
     LOG_DEBUG("Success to find buffer [%lu][%lu] by offset[%lu]", nodebuf->boff,
               nodebuf->blen, boff);
 
-    if (!bufflist_del(buffer, boff)) {
+    if (!bufflist_delete(buffer, boff)) {
       LOG_ERROR("Failed to delete buffer [%lu][%lu]by offset[%lu]",
                 nodebuf->boff, nodebuf->blen, boff);
     } else {

@@ -10,17 +10,19 @@
 #define LOG_DEBUG(FMT, ...)
 #endif
 
-#define BUFFER_LEN 100
+#define BUFFER_LEN 1024
+#define BLOCKS_LEN 512
 
 int main(int argc, char *argv[]) {
   uint64_t idx = 0;
   uint64_t boff = 0;
   uint64_t blen = BUFFER_LEN;
+  uint64_t blks = BLOCKS_LEN;
   bufflist_t *nodebuf = NULL;
   bufflist_t *buffer = bufflist_init();
 
   for (idx = 0; idx < 10; idx++) {
-    if ((nodebuf = bufflist_new(buffer, blen, boff)) == NULL) {
+    if ((nodebuf = bufflist_new(buffer, blen, boff, blks)) == NULL) {
       LOG_DEBUG("Failed to add buffer [%lu][%lu]", boff, blen);
       break;
     }
@@ -33,7 +35,7 @@ int main(int argc, char *argv[]) {
     LOG_DEBUG("Success to find buffer [%lu][%lu] by offset[%lu]", nodebuf->boff,
               nodebuf->blen, boff);
 
-    if (!bufflist_del(buffer, boff)) {
+    if (!bufflist_delete(buffer, boff)) {
       LOG_ERROR("Failed to delete buffer [%lu][%lu]by offset[%lu]",
                 nodebuf->boff, nodebuf->blen, boff);
     } else {
@@ -56,39 +58,39 @@ int main(int argc, char *argv[]) {
 ## output
 ```
 ./bufflist
->>>>>> (bufflist_new_entry:37) [DEBUG] Add buffer [0][100] entry success!
->>>>>> (bufflist_new:61) [DEBUG] Add buffer [0][100] success! total buffer size [100]
->>>>>> (bufflist_new_entry:37) [DEBUG] Add buffer [100][100] entry success!
->>>>>> (bufflist_new:61) [DEBUG] Add buffer [100][100] success! total buffer size [200]
->>>>>> (bufflist_new_entry:37) [DEBUG] Add buffer [200][100] entry success!
->>>>>> (bufflist_new:61) [DEBUG] Add buffer [200][100] success! total buffer size [300]
->>>>>> (bufflist_new_entry:37) [DEBUG] Add buffer [300][100] entry success!
->>>>>> (bufflist_new:61) [DEBUG] Add buffer [300][100] success! total buffer size [400]
->>>>>> (bufflist_new_entry:37) [DEBUG] Add buffer [400][100] entry success!
->>>>>> (bufflist_new:61) [DEBUG] Add buffer [400][100] success! total buffer size [500]
->>>>>> (bufflist_new_entry:37) [DEBUG] Add buffer [500][100] entry success!
->>>>>> (bufflist_new:61) [DEBUG] Add buffer [500][100] success! total buffer size [600]
->>>>>> (bufflist_new_entry:37) [DEBUG] Add buffer [600][100] entry success!
->>>>>> (bufflist_new:61) [DEBUG] Add buffer [600][100] success! total buffer size [700]
->>>>>> (bufflist_new_entry:37) [DEBUG] Add buffer [700][100] entry success!
->>>>>> (bufflist_new:61) [DEBUG] Add buffer [700][100] success! total buffer size [800]
->>>>>> (bufflist_new_entry:37) [DEBUG] Add buffer [800][100] entry success!
->>>>>> (bufflist_new:61) [DEBUG] Add buffer [800][100] success! total buffer size [900]
->>>>>> (bufflist_new_entry:37) [DEBUG] Add buffer [900][100] entry success!
->>>>>> (bufflist_new:61) [DEBUG] Add buffer [900][100] success! total buffer size [1000]
->>>>>> (bufflist_find:78) [DEBUG] Found buffer [500][100] by offset [503]
->>>>>> (bufflist_find:78) [DEBUG] Found buffer [500][100] by offset [503]
->>>>>> (bufflist_del_entry:99) [DEBUG] Del buffer [500][100] entry!
->>>>>> (bufflist_del:123) [DEBUG] Del buffer by offset [503] success! total buffer size [900]
->>>>>> (bufflist_del_entry:99) [DEBUG] Del buffer [0][100] entry!
->>>>>> (bufflist_del_entry:99) [DEBUG] Del buffer [100][100] entry!
->>>>>> (bufflist_del_entry:99) [DEBUG] Del buffer [200][100] entry!
->>>>>> (bufflist_del_entry:99) [DEBUG] Del buffer [300][100] entry!
->>>>>> (bufflist_del_entry:99) [DEBUG] Del buffer [400][100] entry!
->>>>>> (bufflist_del_entry:99) [DEBUG] Del buffer [600][100] entry!
->>>>>> (bufflist_del_entry:99) [DEBUG] Del buffer [700][100] entry!
->>>>>> (bufflist_del_entry:99) [DEBUG] Del buffer [800][100] entry!
->>>>>> (bufflist_del_entry:99) [DEBUG] Del buffer [900][100] entry!
->>>>>> (bufflist_destroy:144) [ERROR] Buffer destroy success!
->>>>>> (main:46) [ERROR] Success to destroy buffer
+>>>>>> (bufflist_new_entry:47) [DEBUG] Add buffer [0][1024][512] entry success!
+>>>>>> (bufflist_new:70) [DEBUG] Add buffer [0][1024][512] success! total buffer size [1024]
+>>>>>> (bufflist_new_entry:47) [DEBUG] Add buffer [1024][1024][512] entry success!
+>>>>>> (bufflist_new:70) [DEBUG] Add buffer [1024][1024][512] success! total buffer size [2048]
+>>>>>> (bufflist_new_entry:47) [DEBUG] Add buffer [2048][1024][512] entry success!
+>>>>>> (bufflist_new:70) [DEBUG] Add buffer [2048][1024][512] success! total buffer size [3072]
+>>>>>> (bufflist_new_entry:47) [DEBUG] Add buffer [3072][1024][512] entry success!
+>>>>>> (bufflist_new:70) [DEBUG] Add buffer [3072][1024][512] success! total buffer size [4096]
+>>>>>> (bufflist_new_entry:47) [DEBUG] Add buffer [4096][1024][512] entry success!
+>>>>>> (bufflist_new:70) [DEBUG] Add buffer [4096][1024][512] success! total buffer size [5120]
+>>>>>> (bufflist_new_entry:47) [DEBUG] Add buffer [5120][1024][512] entry success!
+>>>>>> (bufflist_new:70) [DEBUG] Add buffer [5120][1024][512] success! total buffer size [6144]
+>>>>>> (bufflist_new_entry:47) [DEBUG] Add buffer [6144][1024][512] entry success!
+>>>>>> (bufflist_new:70) [DEBUG] Add buffer [6144][1024][512] success! total buffer size [7168]
+>>>>>> (bufflist_new_entry:47) [DEBUG] Add buffer [7168][1024][512] entry success!
+>>>>>> (bufflist_new:70) [DEBUG] Add buffer [7168][1024][512] success! total buffer size [8192]
+>>>>>> (bufflist_new_entry:47) [DEBUG] Add buffer [8192][1024][512] entry success!
+>>>>>> (bufflist_new:70) [DEBUG] Add buffer [8192][1024][512] success! total buffer size [9216]
+>>>>>> (bufflist_new_entry:47) [DEBUG] Add buffer [9216][1024][512] entry success!
+>>>>>> (bufflist_new:70) [DEBUG] Add buffer [9216][1024][512] success! total buffer size [10240]
+>>>>>> (bufflist_find:86) [DEBUG] Found buffer [5120][1024][512] by offset [5123]
+>>>>>> (bufflist_find:86) [DEBUG] Found buffer [5120][1024][512] by offset [5123]
+>>>>>> (bufflist_delentry:100) [DEBUG] Del buffer [5120][1024][512] entry!
+>>>>>> (bufflist_delete:127) [DEBUG] Del buffer by offset [5123] success! total buffer size [9216]
+>>>>>> (bufflist_delentry:100) [DEBUG] Del buffer [0][1024][512] entry!
+>>>>>> (bufflist_delentry:100) [DEBUG] Del buffer [1024][1024][512] entry!
+>>>>>> (bufflist_delentry:100) [DEBUG] Del buffer [2048][1024][512] entry!
+>>>>>> (bufflist_delentry:100) [DEBUG] Del buffer [3072][1024][512] entry!
+>>>>>> (bufflist_delentry:100) [DEBUG] Del buffer [4096][1024][512] entry!
+>>>>>> (bufflist_delentry:100) [DEBUG] Del buffer [6144][1024][512] entry!
+>>>>>> (bufflist_delentry:100) [DEBUG] Del buffer [7168][1024][512] entry!
+>>>>>> (bufflist_delentry:100) [DEBUG] Del buffer [8192][1024][512] entry!
+>>>>>> (bufflist_delentry:100) [DEBUG] Del buffer [9216][1024][512] entry!
+>>>>>> (bufflist_destroy:144) [DEBUG] Buffer destroy success!
+>>>>>> (main:48) [ERROR] Success to destroy buffer
 ```
